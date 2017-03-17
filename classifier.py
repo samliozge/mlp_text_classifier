@@ -2,51 +2,56 @@ import tensorflow as tf
 import numpy as np 
 import dataprep
 
-sess = tf.InteractiveSession()
+class Classifier:
+    
+    def __init__(self,first_hidden=4):
 
-inputs = tf.placeholder(tf.float32, shape = [None,100])
+        self.sess = tf.InteractiveSession()
 
-outputs = tf.placeholder(tf.float32, shape = [None,1])
+        self.inputs = tf.placeholder(tf.float32, shape = [None,100])
 
-first_hidden = 4 
+        self.outputs = tf.placeholder(tf.float32, shape = [None,1])
 
-w1 = tf.Variable(tf.truncated_normal([100,first_hidden]))
+        self.first_hidden = first_hidden
 
-b1 = tf.Variable(tf.zeros([first_hidden]))
+        self.w1 = tf.Variable(tf.truncated_normal([100,self.first_hidden]))
 
-layer_1_output = tf.nn.sigmoid(tf.matmul(inputs,w1) + b1 )
+        self.b1 = tf.Variable(tf.zeros([self.first_hidden]))
 
-w2 = tf.Variable(tf.truncated_normal([first_hidden,100]))
+        self.layer_1_output = tf.nn.sigmoid(tf.matmul(self.inputs,self.w1) + self.b1 )
 
-b2 = tf.Variable(tf.zeros([100]))
+        self.w2 = tf.Variable(tf.truncated_normal([self.first_hidden,100]))
 
-layer_2_output = tf.nn.sigmoid(tf.matmul(layer_1_output,w2) + b2)
+        self.b2 = tf.Variable(tf.zeros([100]))
 
-w3 = tf.Variable(tf.truncated_normal([100,1]))
+        self.layer_2_output = tf.nn.sigmoid(tf.matmul(self.layer_1_output,self.w2) + self.b2)
 
-b3 = tf.Variable(tf.zeros([1]))
+        self.w3 = tf.Variable(tf.truncated_normal([100,1]))
 
-result = tf.nn.sigmoid(tf.matmul(layer_2_output,w3) + b3 )
+        self.b3 = tf.Variable(tf.zeros([1]))
+    
+    def error_correction(self):
 
-error = 0.5*tf.reduce_sum(tf.subtract(result,outputs) * tf.subtract(result,outputs))
+        result = tf.nn.sigmoid(tf.matmul(self.layer_2_output,self.w3) + self.b3 )
 
-train_fixer = tf.train.GradientDescentOptimizer(0.05).minimize(error)            
+        self.error = 0.5*tf.reduce_sum(tf.subtract(result,self.outputs) * tf.subtract(result,self.outputs))
 
-sess.run(tf.initialize_all_variables())
+        self.train_fixer = tf.train.GradientDescentOptimizer(0.05).minimize(self.error)            
+
+        self.sess.run(tf.initialize_all_variables())
+    
+    def trainNN(self,x,y):
+
+       for i in range(0,3):
+            _,loss = self.sess.run([self.train_fixer, self.error],feed_dict =
+            {self.inputs:np.array(x),self.outputs:np.array(y)})
+       print (loss)
 
 
-#training_inputs = [[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0]]
-
-
-training_inputs = [dataprep.v1,dataprep.v2]
-
-
-
-output1 = [[0.0], [1.0]]
-print ("OUTPUT1")
-print (output1)
-
-for i in range(0,3):
-    _,loss = sess.run([train_fixer, error],feed_dict =
-     {inputs:np.array(training_inputs),outputs:np.array(output1)})
-    print (loss)
+    
+model = Classifier()
+model.error_correction()
+       
+x = [dataprep.v1,dataprep.v2]
+y = [[0.0], [1.0]]
+model.trainNN(x,y)
